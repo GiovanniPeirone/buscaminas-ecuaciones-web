@@ -1,0 +1,41 @@
+
+button{
+  padding: 1%;
+  padding-left: 5%;
+  padding-right: 5%;
+  background-color: #fcef9c;
+  border: none;
+  border-radius: 50px;
+  font-size: 1rem;
+}
+
+.game{
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.game-conteiner{
+  margin: auto;
+  width: 700px; 
+  background-color:#fcef9c;
+  border-radius: 50px;
+  margin-top: 5%; 
+  margin-bottom: 2%;
+  padding: 2%;
+}
+
+
+.game-row-conteiner{
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  background-color: aliceblue;
+  height: 700px;
+  width: 700px;
+}
+
+.game-row-conteiner div{
+}
+
