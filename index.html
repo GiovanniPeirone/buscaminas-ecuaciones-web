@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Buscaminas</title>
+  <title>Buscaminas Algebraico</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: sans-serif;
-      background:#778c94 ;
+      background:#778c94;
       color: #000;
       display: flex;
       flex-direction: column;
@@ -16,6 +16,7 @@
       justify-content: flex-start;
       height: 100vh;
       padding: 1rem;
+      user-select: none;
     }
     h1 { margin-bottom: 1rem; text-align: center; }
 
@@ -30,7 +31,7 @@
       font-size: 1rem;
       border: none;
       border-radius: 6px;
-      background:#edeae1 ;
+      background:#edeae1;
       color: black;
       cursor: pointer;
     }
@@ -48,22 +49,30 @@
     .cell {
       width: 40px;
       height: 40px;
-      background-color:#edeae1 ;
-      border: 1px solid#9e9d9b ;
-      font-size: 18px;
+      background-color:#edeae1;
+      border: 1px solid #9e9d9b;
+      font-size: 15px;
       text-align: center;
       line-height: 40px;
       border-radius: 4px;
       color: white;
-      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .cell.revealed {
       background-color: #888;
+      color: black;
+      font-weight: bold;
+      font-family: monospace;
+      font-size: 16px;
     }
 
     .cell.bomb {
       background-color: red;
+      font-size: 20px;
+      color: white;
     }
 
     .cell.flagged {
@@ -79,14 +88,14 @@
       .cell {
         width: 32px;
         height: 32px;
-        font-size: 16px;
+        font-size: 14px;
         line-height: 32px;
       }
     }
   </style>
 </head>
 <body>
-  <h1>Buscaminas</h1>
+  <h1>Buscaminas Algebraico</h1>
   <div id="controls">
     <button id="flagModeBtn">🚩 Modo Bandera</button>
     <button onclick="createBoard()">🔄 Reiniciar</button>
@@ -97,7 +106,7 @@
   <script>
     const rows = 8;
     const cols = 8;
-    const bombsCount = 10;
+    const bombsCount = Math.floor((rows * cols) * 0.15); // 15% minas
 
     const game = document.getElementById("game");
     const status = document.getElementById("status");
@@ -112,6 +121,40 @@
       flagMode = !flagMode;
       flagModeBtn.classList.toggle("active", flagMode);
     };
+
+    // Genera expresión algebraica que equivale a 'num'
+    function getAlgebraicExpression(num) {
+      if (num === 0) return "";
+
+      const expressions = [];
+
+      // Número directo como fallback
+      expressions.push(num.toString());
+
+      // Sumandos (a + b = num)
+      for (let i = 1; i < num; i++) {
+        expressions.push(`${i}+${num - i}`);
+      }
+
+      // Restas (num + i - i)
+      for (let i = 1; i <= 3; i++) {
+        expressions.push(`${num + i}-${i}`);
+      }
+
+      // Multiplicaciones/divisiones si es divisible
+      for (let i = 1; i <= num; i++) {
+        if (i !== 0 && num % i === 0) {
+          const factor = num / i;
+          expressions.push(`${factor}×${i}`);
+          if ((num * i) > 0 && Number.isInteger(num * i)) {
+            expressions.push(`${num * i}/${i}`);
+          }
+        }
+      }
+
+      // Elegir aleatoriamente una expresión
+      return expressions[Math.floor(Math.random() * expressions.length)];
+    }
 
     function createBoard() {
       game.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
@@ -131,7 +174,7 @@
         }
       }
 
-      // Números
+      // Calcular números alrededor de bombas
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           if (board[r][c] === "B") continue;
@@ -209,11 +252,14 @@
       }
 
       if (board[r][c] > 0) {
-        cell.textContent = board[r][c];
+        // Mostrar expresión algebraica en lugar de número directo
+        cell.textContent = getAlgebraicExpression(board[r][c]);
       } else {
+        cell.textContent = "";
+        // Revelar celdas vacías alrededor recursivamente
         for (let i = -1; i <= 1; i++) {
           for (let j = -1; j <= 1; j++) {
-            revealCell(r + i, c + j);
+            if(i!==0 || j!==0) revealCell(r + i, c + j);
           }
         }
       }
