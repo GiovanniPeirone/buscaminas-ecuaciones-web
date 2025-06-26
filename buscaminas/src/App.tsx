@@ -83,12 +83,15 @@ function App() {
           }
         }
         cantidadDecasillasLibres = cantidadDECAsillas - CantidadDeBombas;
+
+        
         despejeDeCasillasIniciales(id, ArrayBombas)
 
 
       }
 
       console.log('Clickeaste la casilla', id);
+      slected_element.innerText = verSiHayBomasAlRededor(id, ArrayBombas).toString()
       slected_element.style.backgroundColor = '#000'
     
     }
@@ -123,8 +126,60 @@ function App() {
   );
 }
 
-function verSiHayBomasAlRededor(id : number){
+function verSiHayBomasAlRededor(id : number, ArrayBombas : number[]) : number{
   //Esta funcion va a estar encargada de detectar la cantidad de bombas al rederor de una casilla
+  let cantidadDeBombasAlrededor = 0;
+  let topNum = 6;
+  for (let i = 0; i < 3; i++) {
+    let calc = id - topNum
+    const btntop = document.getElementById(calc.toString())
+    if (btntop) {
+      for (let a = 0; a < ArrayBombas.length; a++) {
+        if (ArrayBombas[a] == calc) {
+          cantidadDeBombasAlrededor = cantidadDeBombasAlrededor + 1;
+        }
+      }
+    }
+    topNum = topNum - 1;
+  }
+
+  //Depeje de todas las casillas de abajo
+  let bottomNum = 6;
+  for (let i = 0; i < 3; i++) {
+    let calc = id + bottomNum
+    const btntop = document.getElementById(calc.toString())
+    if (btntop) {
+      for (let a = 0; a < ArrayBombas.length; a++) {
+        if (ArrayBombas[a] == calc) {
+          cantidadDeBombasAlrededor = cantidadDeBombasAlrededor + 1;
+        } 
+      }
+    }
+    bottomNum = bottomNum - 1;
+  }
+
+  // Despeje de la casilla de la derecha
+  const calcleft = id - 1;
+  const btnleft = document.getElementById(calcleft.toString())
+  if (btnleft) {
+    for (let a = 0; a < ArrayBombas.length; a++) {
+      if (ArrayBombas[a] == calcleft) {
+        cantidadDeBombasAlrededor = cantidadDeBombasAlrededor + 1;
+      }
+    }
+  }
+  //Despeje de la casillade la derecja
+  const calcright = id + 1;
+  const btnright = document.getElementById(calcright.toString())
+  if (btnright) {
+    for (let a = 0; a < ArrayBombas.length; a++) {
+      if (ArrayBombas[a] == calcleft) {
+        cantidadDeBombasAlrededor = cantidadDeBombasAlrededor + 1;
+      }
+    }
+  }
+
+  return cantidadDeBombasAlrededor;
 }
 
 function despejeDeCasillasIniciales(id : number, ArrayBombas : number[]) {
@@ -138,12 +193,15 @@ function despejeDeCasillasIniciales(id : number, ArrayBombas : number[]) {
         if (ArrayBombas[a] == calc) {
           break;
         } else {
+          ArrayBombas.splice(a, a)
           btntop.style.backgroundColor = "black"
+          btntop.innerText = verSiHayBomasAlRededor(calc, ArrayBombas).toString()
           break;
         }
       }
     }
     topNum = topNum - 1;
+  
   }
 
   //Depeje de todas las casillas de abajo

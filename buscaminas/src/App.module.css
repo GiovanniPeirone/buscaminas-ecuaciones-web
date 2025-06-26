@@ -39,6 +39,9 @@ button{
   border-radius: 10px;
   border: #fcef9c solid 1px;
   background-color: cadetblue;
+  color: #fcef9c;
+  font-size: 5rem;
+  
 }
 
 .item:hover{
