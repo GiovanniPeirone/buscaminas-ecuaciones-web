@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Buscaminas</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      background:#778c94 ;
+      color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      padding: 1rem;
+    }
+    h1 { margin-bottom: 1rem; text-align: center; }
+
+    #controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      background:#edeae1 ;
+      color: black;
+      cursor: pointer;
+    }
+
+    button.active {
+      background-color: #008CBA;
+    }
+
+    #game {
+      display: grid;
+      gap: 4px;
+      touch-action: manipulation;
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      background-color:#edeae1 ;
+      border: 1px solid#9e9d9b ;
+      font-size: 18px;
+      text-align: center;
+      line-height: 40px;
+      border-radius: 4px;
+      color: white;
+      user-select: none;
+    }
+
+    .cell.revealed {
+      background-color: #888;
+    }
+
+    .cell.bomb {
+      background-color: red;
+    }
+
+    .cell.flagged {
+      background-color: #226;
+    }
+
+    #status {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+    }
+
+    @media (max-width: 500px) {
+      .cell {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+        line-height: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Buscaminas</h1>
+  <div id="controls">
+    <button id="flagModeBtn">🚩 Modo Bandera</button>
+    <button onclick="createBoard()">🔄 Reiniciar</button>
+  </div>
+  <div id="game"></div>
+  <div id="status"></div>
+
+  <script>
+    const rows = 8;
+    const cols = 8;
+    const bombsCount = 10;
+
+    const game = document.getElementById("game");
+    const status = document.getElementById("status");
+    const flagModeBtn = document.getElementById("flagModeBtn");
+
+    let board = [];
+    let revealed = [];
+    let flagged = [];
+    let flagMode = false;
+
+    flagModeBtn.onclick = () => {
+      flagMode = !flagMode;
+      flagModeBtn.classList.toggle("active", flagMode);
+    };
+
+    function createBoard() {
+      game.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+      board = Array(rows).fill().map(() => Array(cols).fill(0));
+      revealed = Array(rows).fill().map(() => Array(cols).fill(false));
+      flagged = Array(rows).fill().map(() => Array(cols).fill(false));
+      status.textContent = "";
+
+      // Plantar bombas
+      let bombsPlaced = 0;
+      while (bombsPlaced < bombsCount) {
+        let r = Math.floor(Math.random() * rows);
+        let c = Math.floor(Math.random() * cols);
+        if (board[r][c] !== "B") {
+          board[r][c] = "B";
+          bombsPlaced++;
+        }
+      }
+
+      // Números
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (board[r][c] === "B") continue;
+          let count = 0;
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              const nr = r + i;
+              const nc = c + j;
+              if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && board[nr][nc] === "B") {
+                count++;
+              }
+            }
+          }
+          board[r][c] = count;
+        }
+      }
+
+      renderBoard();
+    }
+
+    function renderBoard() {
+      game.innerHTML = "";
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          cell.addEventListener("click", onCellClick);
+          game.appendChild(cell);
+        }
+      }
+    }
+
+    function onCellClick(e) {
+      const r = parseInt(e.target.dataset.row);
+      const c = parseInt(e.target.dataset.col);
+
+      if (revealed[r][c]) return;
+
+      if (flagMode) {
+        toggleFlag(r, c);
+      } else {
+        if (flagged[r][c]) return;
+        revealCell(r, c);
+      }
+    }
+
+    function toggleFlag(r, c) {
+      const cell = game.children[r * cols + c];
+      if (revealed[r][c]) return;
+
+      flagged[r][c] = !flagged[r][c];
+      if (flagged[r][c]) {
+        cell.textContent = "🚩";
+        cell.classList.add("flagged");
+      } else {
+        cell.textContent = "";
+        cell.classList.remove("flagged");
+      }
+    }
+
+    function revealCell(r, c) {
+      if (r < 0 || c < 0 || r >= rows || c >= cols || revealed[r][c]) return;
+
+      const cell = game.children[r * cols + c];
+      revealed[r][c] = true;
+      cell.classList.add("revealed");
+
+      if (board[r][c] === "B") {
+        cell.classList.add("bomb");
+        cell.textContent = "💣";
+        gameOver(false);
+        return;
+      }
+
+      if (board[r][c] > 0) {
+        cell.textContent = board[r][c];
+      } else {
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            revealCell(r + i, c + j);
+          }
+        }
+      }
+
+      checkWin();
+    }
+
+    function gameOver(win) {
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const cell = game.children[r * cols + c];
+          if (board[r][c] === "B") {
+            cell.textContent = "💣";
+            cell.classList.add("bomb");
+          }
+          cell.removeEventListener("click", onCellClick);
+        }
+      }
+      status.textContent = win ? "¡Ganaste! 🎉" : "Perdiste 💥";
+    }
+
+    function checkWin() {
+      let cellsRevealed = 0;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (revealed[r][c]) cellsRevealed++;
+        }
+      }
+
+      if (cellsRevealed === rows * cols - bombsCount) {
+        gameOver(true);
+      }
+    }
+
+    createBoard();
+  </script>
+</body>
+</html>
